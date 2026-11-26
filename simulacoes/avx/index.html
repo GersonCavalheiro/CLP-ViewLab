@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Um elemento por iteração · Laboratório AVX</title>
+  <meta name="description" content="Simulação de multiplicação de um vetor por um escalar em x86-64.">
+  <link rel="stylesheet" href="estilo.css">
+  <script src="simulador.js" defer></script>
+</head>
+<body data-mode="scalar">
+  <header class="site-header">
+    <div class="wrap header-row">
+      <a class="brand" href="index.html">Laboratório <strong>AVX</strong></a>
+      <nav aria-label="Versões do programa">
+        <a href="../../index.html">CLP-ViewLab</a>
+        <a href="index.html" aria-current="page">Escalar</a>
+        <a href="avx.html">Vetorial AVX</a>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap">
+    <div class="hero">
+      <h1>Um elemento por iteração</h1>
+      <p>O laço escalar lê um valor, multiplica por 2,5 e grava o produto antes de avançar para o próximo índice.</p>
+      <div class="facts" aria-label="Parâmetros da simulação">
+        <span>1.024 elementos <code>double</code></span>
+        <span>Fator <strong>2,5</strong></span>
+        <span>SSE2 escalar</span>
+      </div>
+    </div>
+
+    <div class="workspace">
+      <section class="simulator" aria-labelledby="simulation-title">
+        <div class="sim-top">
+          <h2 id="simulation-title">Simulação</h2>
+          <div class="controls">
+            <button class="primary" id="play" type="button">Reproduzir</button>
+            <button id="step" type="button">Uma instrução</button>
+            <button id="finish" type="button">Executar até o fim</button>
+            <button id="reset" type="button">Reiniciar</button>
+          </div>
+          <div class="speed">
+            <label for="speed">Velocidade</label>
+            <input type="range" id="speed" min="0" max="7" value="2">
+            <output id="rate" for="speed">8 instruções/s</output>
+          </div>
+        </div>
+
+        <dl class="stats" aria-label="Estado da execução">
+          <div><dt>Instruções executadas</dt><dd id="count">0</dd></div>
+          <div><dt>Iterações concluídas</dt><dd id="iterations">0</dd></div>
+          <div><dt>Elementos gravados</dt><dd><span id="written">0</span> <small>/ 1.024</small></dd></div>
+          <div><dt>Índice do laço</dt><dd id="index">—</dd></div>
+        </dl>
+
+        <div class="flow" id="flow" aria-label="Memória e registradores"></div>
+        <div class="status" id="status" aria-live="polite" aria-atomic="true">
+          <strong id="event-label">Pronto para executar</strong>
+          <p id="event-detail">A entrada começa em 1 e aumenta de 1 em 1. A saída será preenchida durante a execução.</p>
+        </div>
+        <noscript><p>Ative o JavaScript para executar a simulação.</p></noscript>
+      </section>
+
+      <div class="source">
+        <section class="code-panel" aria-labelledby="asm-title">
+          <div class="code-heading"><h2 id="asm-title">Assembly escalar</h2><span>x86-64 · Intel</span></div>
+          <pre aria-label="Trecho em assembly"><code id="assembly"></code></pre>
+          <p class="code-note"><code>RSI</code> aponta para a entrada, <code>RDI</code> para a saída e <code>RAX</code> guarda o índice. Entrada e saída ocupam regiões distintas. Cada <code>double</code> ocupa 8 bytes. O rótulo de dados <code>escala</code> aponta para a constante 2,5.</p>
+        </section>
+        <section class="code-panel" aria-labelledby="c-title">
+          <div class="code-heading"><h2 id="c-title">Código em C</h2></div>
+          <pre><code>#include &lt;stddef.h&gt;
+
+void multiplicar(
+    double *restrict saida,
+    const double *restrict entrada)
+{
+    const double escala = 2.5;
+    for (size_t i = 0; i &lt; 1024; ++i) {
+        saida[i] = entrada[i] * escala;
+    }
+}</code></pre>
+        </section>
+      </div>
+    </div>
+
+    <section class="accounting" aria-labelledby="account-title">
+      <div>
+        <h2 id="account-title">Contagem de instruções</h2>
+        <p><code>MULSD</code> multiplica o <code>double</code> na posição baixa do registrador XMM. O laço avança um índice após cada gravação.</p>
+        <p>Contamos as instruções do trecho exibido. As duas instruções iniciais executam uma vez. Cada iteração executa seis instruções, incluindo o salto condicional da última iteração. O rótulo <code>.laco</code> apenas marca o destino do salto.</p>
+      </div>
+      <dl class="totals">
+        <div><dt>Iterações ao concluir</dt><dd>1.024</dd></div>
+        <div><dt>Total ao concluir</dt><dd><strong>6.146</strong></dd></div>
+      </dl>
+    </section>
+    <footer>
+      <p>A contagem mede instruções executadas. O tempo real depende também de fatores como throughput, latência e acessos à memória.</p>
+      <a href="https://cdrdv2-public.intel.com/782151/253667-sdm-vol-2b.pdf">Referência de instruções da Intel</a>
+    </footer>
+  </main>
+</body>
+</html>

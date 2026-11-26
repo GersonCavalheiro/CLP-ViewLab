@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Por dentro do lock xadd · Laboratório de Atômicas</title>
+  <link rel="stylesheet" href="estilo.css">
+  <script src="modelo.js" defer></script>
+  <script src="simulador.js" defer></script>
+</head>
+<body data-page="hardware">
+  <header class="site-header">
+    <div class="wrap nav-row">
+      <a class="brand" href="index.html">Laboratório de Atômicas</a>
+      <nav aria-label="Simulações">
+        <a href="../../index.html">CLP-ViewLab</a>
+        <a href="index.html" aria-current="page">Hardware</a>
+        <a href="comparacao.html">Comparação</a>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap">
+    <h1>Por dentro do <code>lock xadd</code></h1>
+    <p class="intro" id="scenario-description">Dois núcleos incrementam o contador em 0x1000. A segunda instrução começa durante a primeira. Siga o valor da linha e a transferência da permissão de escrita até o contador chegar a 43.</p>
+
+    <section class="lab" aria-label="Simulação de instruções atômicas">
+      <div class="command-row">
+        <label for="mode">Cenário
+          <select id="mode">
+            <option value="atomic">Duas somas atômicas</option>
+            <option value="observer">Soma e leitura</option>
+          </select>
+        </label>
+        <code id="sequence">lock xadd [rdi], eax</code>
+        <span>Contador de 32 bits · x86-64</span>
+      </div>
+      <section class="timeline-panel" aria-labelledby="timeline-title">
+        <h2 id="timeline-title">Linha do tempo</h2>
+        <p id="timeline-description">Barras na mesma posição horizontal acontecem em paralelo. A escala é ilustrativa.</p>
+        <div id="timeline"></div>
+        <label class="scrubber" for="time">
+          <span>Instante</span>
+          <input type="range" id="time" min="0" value="0" aria-describedby="timeline-description">
+        </label>
+        <div class="playback controls">
+          <button type="button" class="primary" id="play">Reproduzir</button>
+          <div class="event-navigation" role="group" aria-label="Execução passo a passo">
+            <button type="button" id="previous-event">Evento anterior</button>
+            <button type="button" id="next-event">Próximo evento</button>
+          </div>
+          <button type="button" id="reset">Voltar ao início</button>
+        </div>
+      </section>
+      <div class="event" aria-live="polite" aria-atomic="true">
+        <span class="step-label" id="event-label"></span>
+        <h2 id="event-title"></h2>
+        <p id="explanation"></p>
+      </div>
+      <div class="board" id="board" role="group" aria-label="Diagrama funcional do processador"></div>
+      <noscript>Ative o JavaScript para executar a simulação.</noscript>
+    </section>
+
+    <section class="reading" aria-label="Como interpretar o diagrama">
+      <div>
+        <h2>Linha de cache e coerência</h2>
+        <p><strong>S</strong> é uma cópia compartilhada, <strong>E</strong> é uma linha exclusiva ainda limpa, <strong>M</strong> é uma linha exclusiva modificada e <strong>I</strong> é uma cópia inválida. Na transferência de uma linha modificada, o outro cache pode receber o valor atualizado enquanto a cópia inferior ainda guarda 41.</p>
+      </div>
+      <div>
+        <h2>Quem transporta e quem decide</h2>
+        <p>A interconexão encaminha pedidos, respostas e dados. O controlador consulta o diretório da linha e mantém uma fila para os pedidos desse endereço. A simulação usa um modelo MESI de duas caches para uma linha cacheável e alinhada. Os tempos, as mensagens e a localização da espera variam conforme o processador.</p>
+      </div>
+    </section>
+    <footer class="references">
+      <a href="https://cdrdv2-public.intel.com/868137/325462-089-sdm-vol-1-2abcd-3abcd-4.pdf">Manual de arquitetura da Intel</a>
+      <a href="https://cdrdv2-public.intel.com/821614/356477-Optimization-Reference-Manual-V2-050.pdf">Manual de otimização da Intel</a>
+      <a href="https://www.gem5.org/documentation/general_docs/ruby/MESI_Two_Level/">Protocolo MESI com diretório no gem5</a>
+    </footer>
+  </main>
+</body>
+</html>

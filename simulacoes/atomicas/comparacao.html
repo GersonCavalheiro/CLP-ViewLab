@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dois núcleos, um contador · Laboratório de Atômicas</title>
+  <link rel="stylesheet" href="estilo.css">
+  <script src="modelo.js" defer></script>
+  <script src="simulador.js" defer></script>
+</head>
+<body data-page="comparison">
+  <header class="site-header">
+    <div class="wrap nav-row">
+      <a class="brand" href="index.html">Laboratório de Atômicas</a>
+      <nav aria-label="Simulações">
+        <a href="../../index.html">CLP-ViewLab</a>
+        <a href="index.html">Hardware</a>
+        <a href="comparacao.html" aria-current="page">Comparação</a>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap">
+    <h1>Dois núcleos, um contador</h1>
+    <p class="intro">Mude a estratégia e o intervalo entre o início dos núcleos. O diagrama usa o mesmo modelo da página de hardware para mostrar as instruções, a fila de coerência e as transferências da linha.</p>
+
+    <section class="lab" aria-label="Simulação de incrementos concorrentes">
+      <div class="command-row">
+        <label for="mode">Estratégia
+          <select id="mode">
+            <option value="split">Leitura, soma e escrita</option>
+            <option value="atomic">Soma atômica</option>
+          </select>
+        </label>
+        <label for="first">Primeiro núcleo
+          <select id="first">
+            <option value="0">Núcleo 0</option>
+            <option value="1">Núcleo 1</option>
+          </select>
+        </label>
+        <label for="offset">Início do segundo núcleo
+          <select id="offset">
+            <option value="0">Simultâneo</option>
+            <option value="1" selected>Após 1 unidade</option>
+            <option value="6">Após 6 unidades</option>
+            <option value="20">Em sequência</option>
+          </select>
+        </label>
+        <code id="sequence">mov → add → mov</code>
+      </div>
+      <section class="timeline-panel" aria-labelledby="timeline-title">
+        <h2 id="timeline-title">Linha do tempo</h2>
+        <p id="timeline-description">Barras na mesma posição horizontal acontecem em paralelo. A escala é ilustrativa.</p>
+        <div id="timeline"></div>
+        <label class="scrubber" for="time">
+          <span>Instante</span>
+          <input type="range" id="time" min="0" value="0" aria-describedby="timeline-description">
+        </label>
+        <div class="playback controls">
+          <button type="button" class="primary" id="play">Reproduzir</button>
+          <div class="event-navigation" role="group" aria-label="Execução passo a passo">
+            <button type="button" id="previous-event">Evento anterior</button>
+            <button type="button" id="next-event">Próximo evento</button>
+          </div>
+          <button type="button" id="reset">Voltar ao início</button>
+        </div>
+      </section>
+      <div class="event" aria-live="polite" aria-atomic="true">
+        <span class="step-label" id="event-label"></span>
+        <h2 id="event-title"></h2>
+        <p id="explanation"></p>
+      </div>
+      <div class="board" id="board" role="group" aria-label="Diagrama funcional do processador"></div>
+      <noscript>Ative o JavaScript para executar a simulação.</noscript>
+    </section>
+
+    <section class="reading" aria-label="Como interpretar o resultado">
+      <div>
+        <h2>Como perder um incremento</h2>
+        <p>Com os inícios próximos, os dois núcleos leem <code>41</code> e calculam <code>42</code> em seus registradores. A coerência ordena as duas escritas, mas cada uma grava o <code>42</code> que já estava em <code>EAX</code>. Se você iniciar o segundo núcleo em sequência, ele lê <code>42</code> e grava <code>43</code>.</p>
+      </div>
+      <div>
+        <h2>O que muda com <code>LOCK</code></h2>
+        <p>Cada instrução <code>LOCK XADD</code> lê e atualiza a linha sob a mesma permissão exclusiva. As execuções podem se sobrepor. A segunda operação recebe <code>42</code> antes de somar e sempre termina em <code>43</code> neste modelo. Veja também o <a href="index.html">cenário de hardware</a>.</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

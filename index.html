@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Simulações interativas de atomicidade, coerência de cache e vetorização AVX. Semestre 2026/2.">
+  <meta name="theme-color" content="#0e1720">
+  <title>CLP-ViewLab · Simulações de execução</title>
+  <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-row">
+      <span class="brand">CLP-ViewLab</span>
+      <span class="semester">Semestre 2026/2</span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="intro">
+      <h1>Simulações de execução</h1>
+      <p>Acompanhe instruções, registradores e memória para entender como o processador executa código concorrente e vetorial.</p>
+    </div>
+
+    <div class="catalog">
+      <section class="lab atomics" aria-labelledby="atomics-title">
+        <div class="lab-intro">
+          <h2 id="atomics-title">Instruções Atômicas</h2>
+          <p>Dois núcleos incrementam um contador que começa em <code>41</code>. Quando o resultado chega a <code>43</code>? Como uma atualização pode se perder?</p>
+        </div>
+
+        <figure class="illustration">
+          <figcaption>Dois incrementos atômicos sobre a mesma linha de cache</figcaption>
+          <div class="counter-flow" role="img" aria-label="O contador passa de 41 para 42 e então para 43">
+            <div><span>Inicial</span><strong>41</strong></div>
+            <span class="connector" aria-hidden="true">→</span>
+            <div><span>Núcleo 0</span><strong>42</strong></div>
+            <span class="connector" aria-hidden="true">→</span>
+            <div><span>Núcleo 1</span><strong>43</strong></div>
+          </div>
+        </figure>
+
+        <ul class="lab-links">
+          <li>
+            <a href="simulacoes/atomicas/comparacao.html">
+              <strong>acessos concorrentes a um contador</strong>
+              <span>Altere o intervalo entre os núcleos e veja quando separar leitura, soma e escrita faz perder um incremento.</span>
+            </a>
+          </li>
+        </ul>
+      </section>
+
+      <section class="lab vector" aria-labelledby="avx-title">
+        <div class="lab-intro">
+          <h2 id="avx-title">Multiplicação de vetor por escalar</h2>
+          <p>Como o número de instruções muda ao multiplicar os mesmos <code>1.024</code> valores por <code>2,5</code> em grupos de quatro?</p>
+        </div>
+
+        <figure class="illustration">
+          <figcaption>Quatro produtos em uma instrução <code>VMULPD</code></figcaption>
+          <div class="vector-flow" role="img" aria-label="Um, dois, três e quatro multiplicados por dois vírgula cinco resultam em dois vírgula cinco, cinco, sete vírgula cinco e dez">
+            <span>Entrada</span><div><span>1</span><span>2</span><span>3</span><span>4</span></div>
+            <span>Produto</span><div><strong>2,5</strong><strong>5</strong><strong>7,5</strong><strong>10</strong></div>
+          </div>
+        </figure>
+
+        <ul class="lab-links">
+          <li>
+            <a href="simulacoes/avx/index.html">
+              <strong>Exploração de paralelismo de laço</strong>
+              <span>Acompanhe o código C e o assembly que lê, multiplica e grava um valor por iteração.</span>
+            </a>
+          </li>
+        </ul>
+      </section>
+    </div>
+
+    <section class="academic" aria-labelledby="academic-title">
+      <h2 id="academic-title">Disciplina e contato</h2>
+      <div class="academic-grid">
+        <dl>
+          <div>
+            <dt>Disciplina</dt>
+            <dd>Conceitos de Linguagens de programação</dd>
+          </div>
+          <div>
+            <dt>Curso</dt>
+            <dd>Ciência da Computação</dd>
+          </div>
+          <div>
+            <dt>Instituição</dt>
+            <dd>Universidade Federal de Pelotas</dd>
+          </div>
+        </dl>
+        <dl>
+          <div>
+            <dt>Professor</dt>
+            <dd>Gerson Geraldo H. Cavalheiro</dd>
+          </div>
+          <div>
+            <dt>Homepage</dt>
+            <dd><a href="https://wp.ufpel.edu.br/gersonc/">Homepage do professor</a></dd>
+          </div>
+          <div>
+            <dt>E-mail</dt>
+            <dd><a href="mailto:gerson.cavalheiro@inf.ufpel.edu.br">gerson.cavalheiro@inf.ufpel.edu.br</a></dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
