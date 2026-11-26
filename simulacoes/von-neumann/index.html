@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Simulação do ciclo de busca, decodificação e execução de uma máquina de von Neumann.">
+  <title>Máquina de von Neumann · CLP-ViewLab</title>
+  <link rel="stylesheet" href="estilo.css">
+  <script src="modelo.js" defer></script>
+  <script src="pipeline.js" defer></script>
+  <script src="simulador.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-row">
+      <a class="brand" href="../../index.html">CLP-ViewLab</a>
+      <span class="semester">Semestre 2026/2</span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="intro">
+      <h1>Máquina de von Neumann</h1>
+      <p>Como a CPU distingue uma instrução de um dado quando ambos estão na mesma memória? Siga o caminho de cada palavra e veja como uma escrita fornece o valor usado pela instrução seguinte.</p>
+    </div>
+
+    <div class="workspace">
+      <section class="lab" aria-labelledby="lab-title">
+        <div class="controls">
+          <h2 id="lab-title">Execução</h2>
+          <div class="actions">
+            <button id="play" class="primary" type="button">Reproduzir</button>
+            <button id="previous" type="button" disabled>Anterior</button>
+            <button id="next" type="button">Avançar</button>
+            <button id="reset" type="button">Reiniciar</button>
+          </div>
+          <div class="adjust">
+            <label for="granularity">Avanço manual
+              <select id="granularity">
+                <option value="event">Por microevento</option>
+                <option value="instruction">Por instrução</option>
+              </select>
+            </label>
+            <div class="speed">
+              <label for="speed">Velocidade</label>
+              <input type="range" id="speed" min="0" max="5" value="1">
+              <output id="rate" for="speed">2 eventos/s</output>
+            </div>
+          </div>
+        </div>
+
+        <div class="status" id="status" aria-live="polite" aria-atomic="true">
+          <ol class="phases" aria-label="Fases da instrução">
+            <li data-phase="fetch">Busca</li>
+            <li data-phase="decode">Decodificação</li>
+            <li data-phase="execute">Execução</li>
+          </ol>
+          <h3 id="event-title">Pronto para buscar</h3>
+          <p id="event-detail">O PC aponta para 0x00.</p>
+        </div>
+
+        <div class="machine" aria-label="CPU, barramentos e memória">
+          <section class="cpu" aria-labelledby="cpu-title">
+            <h3 id="cpu-title">CPU</h3>
+            <dl class="registers">
+              <div data-register="pc"><dt><code>PC</code><span>Contador de programa</span></dt><dd>0x00</dd></div>
+              <div data-register="ri"><dt><code>RI</code><span>Registrador de instrução</span></dt><dd>—</dd></div>
+              <div data-register="acc"><dt><code>ACC</code><span>Acumulador</span></dt><dd>0</dd></div>
+              <div data-register="mar"><dt><code>MAR</code><span>Endereço de memória</span></dt><dd>—</dd></div>
+              <div data-register="mdr"><dt><code>MDR</code><span>Dados da memória</span></dt><dd>—</dd></div>
+            </dl>
+            <dl class="units">
+              <div id="control-unit"><dt>Unidade de controle</dt><dd>Pronta para buscar</dd></div>
+              <div id="alu"><dt>ULA</dt><dd>Em repouso</dd></div>
+            </dl>
+          </section>
+
+          <dl class="buses" aria-label="Sinais entre CPU e memória">
+            <div id="address-bus"><dt>Endereço</dt><dd>—</dd></div>
+            <div id="data-bus"><dt>Dados</dt><dd>—</dd></div>
+            <div id="control-bus"><dt>Controle</dt><dd>—</dd></div>
+          </dl>
+
+          <section class="memory" aria-labelledby="memory-title">
+            <h3 id="memory-title">Memória única</h3>
+            <p>16 endereços · 1 byte por endereço</p>
+            <ol id="memory" class="cells" aria-label="Células de memória"></ol>
+          </section>
+        </div>
+
+        <dl class="counts">
+          <div><dt>Instruções concluídas</dt><dd id="instructions">0</dd></div>
+          <div><dt>Buscas</dt><dd id="fetches">0</dd></div>
+          <div><dt>Leituras de dados</dt><dd id="reads">0</dd></div>
+          <div><dt>Escritas de dados</dt><dd id="writes">0</dd></div>
+        </dl>
+        <noscript><p>Ative o JavaScript para executar a simulação.</p></noscript>
+      </section>
+
+      <aside class="study" aria-label="Programa e dados de entrada">
+        <section class="panel" aria-labelledby="program-title">
+          <h2 id="program-title">Programa</h2>
+          <table class="listing">
+            <thead><tr><th scope="col">Endereço</th><th scope="col">Byte</th><th scope="col">Instrução</th></tr></thead>
+            <tbody id="program"></tbody>
+          </table>
+          <p><code>STORE [0x0C]</code> produz o dado. O <code>ADD [0x0C]</code> que vem logo depois usa o resultado. A leitura após escrita no mesmo endereço é uma dependência <strong>RAW</strong>.</p>
+        </section>
+
+        <section class="panel" aria-labelledby="values-title">
+          <h2 id="values-title">Dados de entrada</h2>
+          <form id="inputs">
+            <div class="operands">
+              <label for="a"><strong>A</strong> <code>0x0A</code>
+                <input id="a" type="number" min="0" max="255" step="1" value="7" required>
+              </label>
+              <label for="b"><strong>B</strong> <code>0x0B</code>
+                <input id="b" type="number" min="0" max="255" step="1" value="5" required>
+              </label>
+            </div>
+            <button type="submit">Carregar e reiniciar</button>
+          </form>
+          <p>Carregue inteiros de 0 a 255 para as duas execuções. A ULA soma módulo 256. Endereços e bytes aparecem em hexadecimal, e o acumulador usa decimal.</p>
+        </section>
+      </aside>
+    </div>
+
+    <section class="explanation" aria-labelledby="model-title">
+      <h2 id="model-title">Ordem do programa</h2>
+      <p>Nesta CPU sequencial, a instrução atual completa sua execução antes da próxima busca. O PC pode apontar para a próxima instrução enquanto a atual ainda ocupa o RI. Em outras implementações, pipeline e escalonamento podem sobrepor operações e ainda preservar a dependência entre a escrita e a leitura.</p>
+      <p>O conjunto de instruções deste exemplo usa os quatro bits altos do byte para indicar a operação. Quando há operando, os quatro bits baixos indicam o endereço. A unidade de controle interpreta o byte buscado pelo PC. Durante a leitura de dados, o conteúdo do endereço é tratado como um valor.</p>
+      <a href="https://ocw.mit.edu/courses/6-004-computation-structures-spring-2017/pages/c9/c9s1/">Referência sobre o modelo de von Neumann</a>
+    </section>
+
+    <section class="pipeline-section" aria-labelledby="pipeline-title">
+      <h2 id="pipeline-title">O mesmo programa com pipeline</h2>
+      <p>Uma coluna da linha do tempo representa um ciclo. A CPU pode buscar, decodificar, executar e concluir instruções diferentes no mesmo ciclo. A memória continua única, com uma porta compartilhada pelas buscas e pelos acessos a dados.</p>
+      <div class="lab pipeline-lab">
+        <div class="controls">
+          <div class="actions">
+            <button class="primary" type="button" id="pipeline-play">Reproduzir</button>
+            <button type="button" id="pipeline-previous" disabled>Ciclo anterior</button>
+            <button type="button" id="pipeline-next">Próximo ciclo</button>
+            <button type="button" id="pipeline-reset">Reiniciar</button>
+          </div>
+          <div class="adjust speed">
+            <label for="pipeline-speed">Velocidade</label>
+            <input type="range" id="pipeline-speed" min="0" max="5" value="1">
+            <output id="pipeline-rate" for="pipeline-speed">2 ciclos/s</output>
+          </div>
+        </div>
+        <div class="status" id="pipeline-status" aria-live="polite" aria-atomic="true">
+          <h3 id="pipeline-cycle">Ciclo 0</h3>
+          <p id="pipeline-detail">A primeira instrução está pronta para ser buscada.</p>
+        </div>
+
+        <dl class="pipeline-stages" aria-label="Instruções em cada estágio no ciclo atual">
+          <div data-pipeline-stage="fetch"><dt>Busca</dt><dd><code></code><span></span></dd></div>
+          <div data-pipeline-stage="decode"><dt>Decodificação</dt><dd><code></code><span></span></dd></div>
+          <div data-pipeline-stage="execute"><dt>Execução</dt><dd><code></code><span></span></dd></div>
+          <div data-pipeline-stage="commit"><dt>Conclusão</dt><dd><code></code><span></span></dd></div>
+        </dl>
+
+        <div class="pipeline-trace" role="region" tabindex="0" aria-label="Linha do tempo do pipeline">
+          <table class="timeline">
+            <caption>Instruções por ciclo. B busca · D decodificação · E execução · C conclusão · * espera.</caption>
+            <thead><tr id="pipeline-columns"></tr></thead>
+            <tbody id="pipeline-rows"></tbody>
+          </table>
+        </div>
+
+        <dl class="pipeline-memory" aria-label="Estado após o ciclo">
+          <div><dt>PC</dt><dd id="pipeline-pc">0x00</dd></div>
+          <div><dt>ACC</dt><dd id="pipeline-acc">0</dd></div>
+          <div><dt>Valor em <code>0x0C</code></dt><dd id="pipeline-value">0</dd></div>
+          <div><dt>Porta da memória</dt><dd id="pipeline-port">Livre</dd></div>
+        </dl>
+        <dl class="counts" aria-label="Acessos e instruções no pipeline">
+          <div><dt>Instruções concluídas</dt><dd id="pipeline-instructions">0</dd></div>
+          <div><dt>Buscas</dt><dd id="pipeline-fetches">0</dd></div>
+          <div><dt>Leituras de dados</dt><dd id="pipeline-reads">0</dd></div>
+          <div><dt>Escritas de dados</dt><dd id="pipeline-writes">0</dd></div>
+        </dl>
+      </div>
+      <p class="pipeline-note">Neste pipeline em ordem, o operando usado na execução vem do estado confirmado ao fim do ciclo anterior. Quando uma instrução depende do ACC ou de uma escrita ainda pendente, ela aguarda na decodificação. Os microeventos da seção sequencial e os ciclos desta seção são escalas didáticas diferentes.</p>
+      <a href="https://ocw.mit.edu/courses/6-004-computation-structures-spring-2017/pages/c15/c15s1/">Referência sobre pipeline e dependências de dados</a>
+    </section>
+  </main>
+</body>
+</html>

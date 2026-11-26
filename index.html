@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Simulações interativas de atomicidade, coerência de cache e vetorização AVX. Semestre 2026/2.">
+  <meta name="description" content="Simulações interativas da máquina de von Neumann, de instruções atômicas e de vetorização AVX. Semestre 2026/2.">
   <meta name="theme-color" content="#0e1720">
   <title>CLP-ViewLab · Simulações de execução</title>
   <link rel="stylesheet" href="estilo.css">
@@ -19,10 +19,37 @@
   <main class="wrap">
     <div class="intro">
       <h1>Simulações de execução</h1>
-      <p>Acompanhe instruções, registradores e memória para entender como o processador executa código concorrente e vetorial.</p>
+      <p>Acompanhe instruções, registradores e memória para entender a execução sequencial, a sobreposição em pipeline, a concorrência e a vetorização.</p>
     </div>
 
     <div class="catalog">
+      <section class="lab von-neumann" aria-labelledby="von-neumann-title">
+        <div class="lab-intro">
+          <h2 id="von-neumann-title">Máquina de von Neumann</h2>
+          <p>Como a CPU usa a mesma memória para buscar instruções e ler dados? O que acontece quando o pipeline sobrepõe instruções que dependem umas das outras?</p>
+        </div>
+
+        <figure class="illustration">
+          <figcaption>Uma escrita fornece o valor da leitura seguinte</figcaption>
+          <div class="counter-flow" role="img" aria-label="STORE grava 12 no endereço 0x0C, de onde ADD lê o valor 12">
+            <div><span>STORE</span><strong>12</strong></div>
+            <span class="connector" aria-hidden="true">→</span>
+            <div><span>Memória</span><strong>0x0C</strong></div>
+            <span class="connector" aria-hidden="true">→</span>
+            <div><span>ADD</span><strong>12</strong></div>
+          </div>
+        </figure>
+
+        <ul class="lab-links">
+          <li>
+            <a href="simulacoes/von-neumann/index.html">
+              <strong>Execução sequencial e em pipeline</strong>
+              <span>Execute o mesmo programa das duas formas e veja quando uma instrução precisa esperar pelo valor produzido pela anterior.</span>
+            </a>
+          </li>
+        </ul>
+      </section>
+
       <section class="lab atomics" aria-labelledby="atomics-title">
         <div class="lab-intro">
           <h2 id="atomics-title">Instruções Atômicas</h2>
